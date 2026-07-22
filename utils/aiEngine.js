@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Triages customer ticket queries, extracts metadata, and generates summaries/drafts.
+ * Triages customer ticket queries, extracts metadata, and generates summaries.
  * @param {string} customerQuery - The raw query submitted by the user.
- * @returns {Promise<Object>} Formatted JSON containing category, urgency, sentiment, summary, and response draft.
+ * @returns {Promise<Object>} Formatted JSON containing category, urgency, sentiment, and aiSummary.
  */
 export async function triageTicket(customerQuery) {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -24,8 +24,7 @@ Analyze the customer query and respond ONLY with a valid JSON object matching th
   "category": "Billing" | "Tech Support" | "Login / Account",
   "urgency": "Low" | "Medium" | "High",
   "sentiment": "Neutral" | "Frustrated" | "Angry",
-  "aiSummary": "One single concise sentence summarizing the issue",
-  "autoReplyDraft": "A polite, professional initial draft response addressing the problem"
+  "aiSummary": "One single concise sentence summarizing the issue"
 }
 
 Rules:
@@ -50,12 +49,12 @@ Rules:
     return result;
   } catch (error) {
     console.error("Error in AI Triage Engine:", error);
+    // Safe fallback object matching Dhruvi's exact schema
     return {
       category: "Tech Support",
       urgency: "Medium",
       sentiment: "Neutral",
-      aiSummary: "Failed to generate AI summary.",
-      autoReplyDraft: "Hello! Thank you for contacting support. An agent will review your issue shortly."
+      aiSummary: "Failed to generate AI summary."
     };
   }
 }
