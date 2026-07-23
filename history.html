@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket History</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <h2>AI Support</h2>
+
+    <ul>
+        <li><a href="dashboard.html"><i class="fa-solid fa-house"></i> Home</a></li>
+
+        <li><a href="create-ticket.html"><i class="fa-solid fa-ticket"></i> Create Ticket</a></li>
+
+        <li><a href="history.html"><i class="fa-solid fa-clock-rotate-left"></i> Ticket History</a></li>
+
+        <li><a href="ai-chat.html"><i class="fa-solid fa-comments"></i> AI Chat</a></li>
+
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+
+        <li><a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+    </ul>
+
+</div>
+
+<div class="main-content">
+
+    <div class="topbar">
+        <h3>Ticket History</h3>
+
+        <div class="top-icons">
+            <i class="fa-solid fa-bell"></i>
+            <i class="fa-solid fa-user-circle"></i>
+        </div>
+    </div>
+
+    <div class="history-container">
+
+        <div class="history-header">
+
+            <input type="text" placeholder="🔍 Search Ticket">
+
+            <select>
+                <option>All Status</option>
+                <option>Open</option>
+                <option>Pending</option>
+                <option>Resolved</option>
+            </select>
+
+        </div>
+
+        <table>
+
+            <tr>
+                <th>Ticket ID</th>
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+
+            <tr>
+                <td>101</td>
+                <td>Login Issue</td>
+                <td>Technical</td>
+                <td>High</td>
+                <td><span class="open">Open</span></td>
+                <td>20 Jul</td>
+            </tr>
+
+            <tr>
+                <td>102</td>
+                <td>Payment Failed</td>
+                <td>Payment</td>
+                <td>Medium</td>
+                <td><span class="resolved">Resolved</span></td>
+                <td>19 Jul</td>
+            </tr>
+
+            <tr>
+                <td>103</td>
+                <td>Refund Request</td>
+                <td>Account</td>
+                <td>Low</td>
+                <td><span class="pending">Pending</span></td>
+                <td>18 Jul</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+</html>
