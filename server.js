@@ -1,22 +1,28 @@
 // server.js
-// Force Node.js to use Google/Cloudflare DNS for MongoDB SRV resolution
-const dns = require('node:dns');
+import dns from 'node:dns';
 dns.setServers(['8.8.8.8', '1.1.1.1']);
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import http from 'http';
+import dotenv from 'dotenv';
+import initSockets from './sockets/ticketSocket.js';
+
+dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+initSockets(server);
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Allows the server to accept JSON data
+app.use(express.json());
 
 // Connect to MongoDB Cloud Database
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('🎉 MongoDB Cloud Connected Successfully!'))
-  .catch((err) => console.error('❌ Database Connection Error:', err));
+//mongoose.connect(process.env.MONGO_URI)
+  //.then(() => console.log('🍃 MongoDB Cloud Connected Successfully'))
+ // .catch((err) => console.error('❌ Database Connection Error:', err));
 
 // Base Route to check if server is running
 app.get('/', (req, res) => {
@@ -25,6 +31,6 @@ app.get('/', (req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
