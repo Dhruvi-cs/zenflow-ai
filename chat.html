@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZenFlow AI - Ticket Chat</title>
+  <title>ZenFlow AI - Ticket Chat with Presence</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -31,7 +31,16 @@
       border-top-right-radius: 8px;
     }
     .chat-header h2 { margin: 0; font-size: 1.2rem; }
-    .chat-header p { margin: 5px 0 0; font-size: 0.85rem; opacity: 0.9; }
+    .chat-header p { margin: 3px 0 0; font-size: 0.85rem; opacity: 0.9; }
+    .presence-bar {
+      padding: 8px 15px;
+      background: #e9ecef;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      color: #555;
+    }
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -47,43 +56,19 @@
       font-size: 0.95rem;
       line-height: 1.4;
     }
-    .message.received {
-      background: #e9ecef;
-      align-self: flex-start;
-      color: #333;
+    .message.received { background: #e9ecef; align-self: flex-start; color: #333; }
+    .message.sent { background: #007bff; color: white; align-self: flex-end; }
+    .sender-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 3px; display: block; }
+    .typing-indicator {
+      font-style: italic;
+      font-size: 0.8rem;
+      color: #888;
+      height: 18px;
+      padding: 0 15px 5px;
     }
-    .message.sent {
-      background: #007bff;
-      color: white;
-      align-self: flex-end;
-    }
-    .sender-name {
-      font-size: 0.75rem;
-      font-weight: bold;
-      margin-bottom: 3px;
-      display: block;
-    }
-    .chat-input-area {
-      display: flex;
-      padding: 12px;
-      border-top: 1px solid #ddd;
-    }
-    .chat-input-area input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      outline: none;
-    }
-    .chat-input-area button {
-      margin-left: 10px;
-      padding: 10px 18px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+    .chat-input-area { display: flex; padding: 12px; border-top: 1px solid #ddd; }
+    .chat-input-area input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+    .chat-input-area button { margin-left: 10px; padding: 10px 18px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .chat-input-area button:hover { background: #0056b3; }
   </style>
 </head>
@@ -95,75 +80,107 @@
       <p id="status-text">Status: Connecting...</p>
     </div>
 
+    <!-- Active Presence Bar -->
+    <div class="presence-bar">
+      <span id="active-count">Active Users: 0</span>
+      <span id="members-list">Members: None</span>
+    </div>
+
     <div class="chat-messages" id="messages-container"></div>
 
+    <!-- Typing Indicator Area -->
+    <div class="typing-indicator" id="typing-text"></div>
+
     <form class="chat-input-area" onsubmit="sendMessage(event)">
-      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" />
+      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" oninput="handleTyping()" />
       <button type="submit">Send</button>
     </form>
   </div>
 
-  <!-- Socket.io Client Library -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
   <script>
-    // Connect to backend server
     const socket = io("http://localhost:5000");
 
     const currentTicketId = "ticket_101";
     const username = "User_" + Math.floor(Math.random() * 1000);
+    let typingTimeout;
 
     const messagesContainer = document.getElementById("messages-container");
     const statusText = document.getElementById("status-text");
     const messageInput = document.getElementById("message-input");
+    const activeCountText = document.getElementById("active-count");
+    const membersListText = document.getElementById("members-list");
+    const typingText = document.getElementById("typing-text");
 
-    // On Connection -> Join Room
+    // 1. Connect & Join Room
     socket.on("connect", () => {
-      statusText.innerText = `Status: Connected as ${username} (Room: ${currentTicketId})`;
-      socket.emit("join_ticket", currentTicketId);
+      statusText.innerText = `Connected as ${username}`;
+      socket.emit("join_ticket", { ticketId: currentTicketId, username });
     });
 
-    // On Disconnect
     socket.on("disconnect", () => {
       statusText.innerText = "Status: Disconnected";
     });
 
-    // Listen for Live Messages
+    // 2. Receive Presence & Member Updates
+    socket.on("presence_update", (users) => {
+      activeCountText.innerText = `Active Users: ${users.length}`;
+      const names = users.map(u => `${u.sender} (${u.status})`).join(", ");
+      membersListText.innerText = `Members: ${names}`;
+    });
+
+    // 3. Receive Typing Notification
+    socket.on("user_typing", ({ username: typer, isTyping }) => {
+      if (isTyping) {
+        typingText.innerText = `${typer} is typing...`;
+      } else {
+        typingText.innerText = "";
+      }
+    });
+
+    // 4. Receive Live Message
     socket.on("receive_message", (data) => {
       displayMessage(data);
     });
 
-    // Send message to backend without reloading
-    function sendMessage(e) {
-      if (e) e.preventDefault(); // Prevents page reload!
+    // Emit typing event when typing in input box
+    function handleTyping() {
+      socket.emit("typing", { ticketId: currentTicketId, username, isTyping: true });
+      
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.emit("typing", { ticketId: currentTicketId, username, isTyping: false });
+      }, 1500);
+    }
 
+    // Detect Tab Visibility / Minimizing (Active vs Away)
+    document.addEventListener("visibilitychange", () => {
+      const status = document.hidden ? "Away" : "Active";
+      socket.emit("update_status", { ticketId: currentTicketId, status });
+    });
+
+    // Send Message
+    function sendMessage(e) {
+      if (e) e.preventDefault();
       const text = messageInput.value.trim();
       if (!text) return;
 
-      const payload = {
+      socket.emit("send_message", {
         ticketId: currentTicketId,
         sender: username,
         message: text,
         timestamp: new Date().toLocaleTimeString()
-      };
+      });
 
-      // Emit event to server
-      socket.emit("send_message", payload);
-
+      socket.emit("typing", { ticketId: currentTicketId, username, isTyping: false });
       messageInput.value = "";
     }
 
-    // Helper to append message bubbles
     function displayMessage(data) {
       const isSelf = data.sender === username;
       const msgDiv = document.createElement("div");
       msgDiv.className = `message ${isSelf ? "sent" : "received"}`;
-      
-      msgDiv.innerHTML = `
-        <span class="sender-name">${isSelf ? "You" : data.sender}</span>
-        <div>${data.message}</div>
-      `;
-
+      msgDiv.innerHTML = `<span class="sender-name">${isSelf ? "You" : data.sender}</span><div>${data.message}</div>`;
       messagesContainer.appendChild(msgDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
