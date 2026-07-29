@@ -1,7 +1,7 @@
 // server.js
-// Force Node.js to use Google/Cloudflare DNS for MongoDB SRV resolution
 const dns = require('node:dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -11,17 +11,27 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Allows the server to accept JSON data
+app.use(express.json());
 
-// Connect to MongoDB Cloud Database
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('🎉 MongoDB Cloud Connected Successfully!'))
-  .catch((err) => console.error('❌ Database Connection Error:', err));
+// Routes
+const ticketRoutes = require('./routes/ticketRoutes');
+app.use('/api/tickets', ticketRoutes);
 
-// Base Route to check if server is running
+// Base route for health check
 app.get('/', (req, res) => {
-  res.json({ message: "Welcome to ZenFlow AI Backend Engine!" });
+  res.json({ message: "ZenFlow Backend Engine is up and running!" });
 });
+
+// Database Connection
+// Database Connection with explicit error logging
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 5000 // Timeout faster (5 seconds instead of 10)
+})
+  .then(() => console.log('🎉 MongoDB Connected Successfully!'))
+  .catch((err) => {
+    console.error('❌ Database Connection Error Name:', err.name);
+    console.error('❌ Database Connection Error Message:', err.message);
+  });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
