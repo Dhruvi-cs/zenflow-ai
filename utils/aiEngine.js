@@ -58,3 +58,38 @@ Rules:
     };
   }
 }
+
+/**
+ * Generates an initial response draft for support agents based on ticket query and category.
+ * @param {string} customerQuery - The user's issue text.
+ * @param {string} category - Category determined by triage (e.g., Billing, Technical Support).
+ * @returns {Promise<string>} Editable response draft for the agent.
+ */
+export async function generateAutoReplyDraft(customerQuery, category) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return "Thank you for reaching out to customer support. An agent will review your issue shortly.";
+  }
+
+  const openai = new OpenAI({ apiKey: apiKey });
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert customer support agent for ZenFlow AI. Draft a polite, professional, and empathetic initial response (< 3-4 sentences) addressing the customer's query under the ${category} department. Do not make unverified promises, but assure them their issue is being investigated.`
+        },
+        { role: "user", content: customerQuery }
+      ],
+      temperature: 0.5,
+    });
+
+    return response.choices[0].message.content.trim();
+  } catch (error) {
+    console.error("Error generating reply draft:", error);
+    return "Thank you for contacting us. We have logged your request and our support team is working on a resolution.";
+  }
+}
