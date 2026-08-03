@@ -1,0 +1,12 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.venv/
+
+# Vector DB local data
+vectordb/
+*.sqlite3
+*.bin
