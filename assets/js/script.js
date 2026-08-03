@@ -1,3 +1,9 @@
+/* 
+  NOTE FOR TEAM: This dummy chat function was commented out because live 
+  AI chat logic is now handled in ai-chat.html, which connects directly 
+  to the Node.js backend route (/api/ai/chat).
+*/
+/*
 function sendMessage(){
 
     let input = document.getElementById("message");
@@ -18,3 +24,4 @@ function sendMessage(){
 
     body.scrollTop = body.scrollHeight;
 }
+    */

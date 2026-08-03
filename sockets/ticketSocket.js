@@ -1,6 +1,14 @@
+import { Server } from "socket.io";
+
 export default function initTicketSocket(io) {
   io.on("connection", (socket) => {
-    console.log(`🔌 Client connected: ${socket.id}`);
+    console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
+
+    // Welcome message on connection
+    socket.emit("welcome", {
+      message: "Connected to ZenFlow Real-Time Server",
+      socketId: socket.id
+    });
 
     // User joins a ticket room
     socket.on("join_ticket", (ticketId) => {
@@ -17,34 +25,7 @@ export default function initTicketSocket(io) {
     });
 
     socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
-    });
-  });
-}
-import { Server } from "socket.io";
-
-function initSockets(server) {
-  const io = new Server(server, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
-    }
-  });
-
-  io.on("connection", (socket) => {
-    console.log(`⚡ [Socket.io] Client connected: ${socket.id}`);
-
-    socket.emit("welcome", {
-      message: "Connected to ZenFlow Real-Time Server",
-      socketId: socket.id
-    });
-
-    socket.on("disconnect", () => {
       console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
     });
   });
-
-  return io;
 }
-
-export default initSockets;
