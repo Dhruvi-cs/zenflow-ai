@@ -1,27 +1,13 @@
-from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from rag.chatbot import ask_chatbot
 
-from backend.rag.config import GOOGLE_API_KEY
+question = input("Ask a question: ")
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",
-    google_api_key=GOOGLE_API_KEY
-)
+result = ask_chatbot(question)
 
-db = Chroma(
-    persist_directory="backend/vectordb",
-    embedding_function=embeddings
-)
+print("\n========== RESULT ==========\n")
 
-query = "How do I reset my password?"
+print("Confidence Score :", result["confidence_score"])
+print("Requires Human   :", result["requires_human_agent"])
 
-results = db.similarity_search(query, k=3)
-
-print("\nTop 3 Results:\n")
-
-for i, doc in enumerate(results, start=1):
-    print(f"Result {i}")
-    print("-" * 40)
-    print(doc.page_content)
-    print("Metadata:", doc.metadata)
-    print()
+print("\nAI Response:\n")
+print(result["response"])

@@ -8,5 +8,11 @@ __pycache__/
 
 # Vector DB local data
 vectordb/
+backend/vectordb/
+
 *.sqlite3
 *.bin
+
+# Logs
+logs/
+*.log
