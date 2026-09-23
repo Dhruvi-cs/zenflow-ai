@@ -1,20 +1,41 @@
-function sendMessage(){
+async function sendMessage() {
+    const input = document.getElementById("message");
+    if (!input) return;
 
-    let input = document.getElementById("message");
+    const text = input.value.trim();
+    if (text === "") return;
 
-    let text = input.value.trim();
+    const body = document.getElementById("chatBody") || document.querySelector(".chat-body");
+    if (!body) return;
 
-    if(text==="") return;
+    // Render user message
+    const userDiv = document.createElement("div");
+    userDiv.className = "user-message";
+    userDiv.textContent = text;
+    body.appendChild(userDiv);
 
-    let body = document.querySelector(".chat-body");
+    input.value = "";
+    body.scrollTop = body.scrollHeight;
 
-    body.innerHTML +=
-    `<div class="user-message">${text}</div>`;
+    // Render loading indicator
+    const botDiv = document.createElement("div");
+    botDiv.className = "bot-message";
+    botDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Typing...';
+    body.appendChild(botDiv);
+    body.scrollTop = body.scrollHeight;
 
-    body.innerHTML +=
-    `<div class="bot-message">Thank you! Our AI has received your message.</div>`;
+    try {
+        const res = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+        });
 
-    input.value="";
+        const data = await res.json();
+        botDiv.textContent = data.reply || "Thank you! Your message has been received. Our AI assistant will help you shortly.";
+    } catch (err) {
+        botDiv.textContent = "Thank you! Your message has been received. Our AI assistant will help you shortly.";
+    }
 
     body.scrollTop = body.scrollHeight;
 }
