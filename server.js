@@ -1,82 +1,51 @@
-// server.js
-<<<<<<< HEAD
-import dns from 'node:dns';
-// Force Node.js to use Google/Cloudflare DNS for MongoDB SRV resolution
-dns.setServers(['8.8.8.8', '1.1.1.1']);
-
-import express from 'express';
-import http from 'http';
-import { Server } from 'socket.io';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-
-import initTicketSocket from './sockets/ticketSocket.js';
-import aiRoutes from './aiRoutes.js';
-
-dotenv.config();
-=======
-const dns = require('node:dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
-
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
->>>>>>> origin/main
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Create HTTP server for Express and Socket.io
-const server = http.createServer(app);
-
-// Middleware
+// 1. Middlewares
 app.use(cors());
 app.use(express.json());
-app.use('/api/ai', aiRoutes);
 
-// Initialize Socket.io with CORS
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+// 2. Database Connection
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/zenflow';
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log('🎉 MongoDB Connected Successfully!'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
+// 3. Health Check Root
+app.get('/', (req, res) => {
+  res.json({ message: 'ZenFlow Backend Engine is up and running!' });
 });
 
-// Initialize Socket logic
-initTicketSocket(io);
-
-// Connect to MongoDB Cloud Database
-if (process.env.MONGO_URI) {
-  mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('🍃 MongoDB Cloud Connected Successfully'))
-    .catch((err) => console.error('❌ Database Connection Error:', err));
-} else {
-  console.log('⚠️ MONGO_URI not found in .env – Running server without DB');
-}
-
-// Routes
+// 4. Ticket Routes (Includes /dashboard, /:id, createTicket, etc.)
 const ticketRoutes = require('./routes/ticketRoutes');
 app.use('/api/tickets', ticketRoutes);
 
-// Base route for health check
-app.get('/', (req, res) => {
-  res.json({ message: "ZenFlow Backend Engine is up and running!" });
+// 5. User Profile Route
+app.get('/api/profile', (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: {
+      name: 'Dhruvi Shri',
+      email: 'dhruvi@example.com',
+      role: 'IT Support Specialist',
+      department: 'Cloud Operations',
+      status: 'Active'
+    }
+  });
 });
 
-// Database Connection
-// Database Connection with explicit error logging
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 5000 // Timeout faster (5 seconds instead of 10)
-})
-  .then(() => console.log('🎉 MongoDB Connected Successfully!'))
-  .catch((err) => {
-    console.error('❌ Database Connection Error Name:', err.name);
-    console.error('❌ Database Connection Error Message:', err.message);
-  });
+// 6. Global Error Handling Middleware (must stay below all routes)
+app.use((err, req, res, next) => {
+  res.status(500).json({ success: false, message: 'Server Error', error: err.message });
+});
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+// 7. Start Server Listener (Keeps the service alive)
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
