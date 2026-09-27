@@ -5,11 +5,13 @@ from pydantic import BaseModel
 
 from rag.chatbot import ask_chatbot
 
+
 logging.basicConfig(
     filename="logs/ai_requests.log",
     level=logging.INFO,
     format="%(asctime)s - %(message)s",
 )
+
 
 app = FastAPI(
     title="ZenFlow AI Backend",
@@ -18,55 +20,55 @@ app = FastAPI(
 
 
 class QueryRequest(BaseModel):
-    ticket_id: str
-    user_query: str
+    query: str
     category: str | None = None
 
 
 @app.get("/")
 def home():
-    return {"message": "ZenFlow AI Backend is running!"}
+    return {
+        "message": "ZenFlow AI Backend is running!"
+    }
 
 
-@app.post("/api/ai/query")
-def query_ai(request: QueryRequest):
+@app.post("/api/v1/rag/query")
+def query_rag(request: QueryRequest):
 
     try:
         result = ask_chatbot(
-            request.user_query,
-            request.category,
+            request.query,
+            request.category
         )
 
         logging.info(
-            f"Ticket: {request.ticket_id} | "
-            f"Query: {request.user_query} | "
+            f"Query: {request.query} | "
             f"Category: {request.category} | "
             f"Confidence: {result['confidence_score']} | "
+            f"Retrieval Distance: {result['retrieval_distance']} | "
             f"Sources: {result['retrieved_sources']} | "
             f"Response: {result['response']}"
         )
 
         return {
-            "ticket_id": request.ticket_id,
-            "deflected": not result["requires_human_agent"],
-            "ai_response": result["response"],
+            "answer": result["response"],
+            "sources": result["retrieved_sources"],
             "confidence_score": result["confidence_score"],
-            "retrieved_sources": result["retrieved_sources"],
+            "retrieval_distance": result["retrieval_distance"],
+            "can_deflect": not result["requires_human_agent"]
         }
 
     except Exception as e:
+
         logging.error(
-            f"Ticket: {request.ticket_id} | "
-            f"Query: {request.user_query} | "
+            f"Query: {request.query} | "
             f"Category: {request.category} | "
             f"Error: {str(e)}"
         )
 
         return {
-            "ticket_id": request.ticket_id,
-            "deflected": False,
-            "ai_response": "AI service temporarily unavailable. Please assign this ticket to a human agent.",
+            "answer": "AI service temporarily unavailable. Please connect with a human support agent.",
+            "sources": [],
             "confidence_score": None,
-            "retrieved_sources": [],
-            "error": str(e),
+            "retrieval_distance": None,
+            "can_deflect": False
         }
