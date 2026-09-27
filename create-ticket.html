@@ -96,6 +96,67 @@
     </div>
 
 </div>
+<!-- AI Response Modal / Container -->
+  <div id="aiResponseContainer" style="display:none; margin: 20px auto; max-width: 600px; padding: 20px; border-radius: 8px; background: #eef2ff; border: 1px solid #c7d2fe;">
+    <h3 style="color: #3730a3; margin-top: 0;">🤖 AI Suggested Solution</h3>
+    <p id="aiAnswer" style="white-space: pre-line; color: #1e1b4b;"></p>
+    <div style="margin-top: 15px;">
+      <button id="resolveBtn" style="background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 10px;">Mark Resolved (Deflect)</button>
+      <button id="escalateBtn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Escalate to Human Agent</button>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('.submit-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const subjectInput = document.querySelector('input[placeholder*="subject"]') || document.querySelectorAll('input[type="text"]')[0];
+      const descriptionInput = document.querySelector('textarea');
+      const submitBtn = document.querySelector('.submit-btn');
+
+      const subject = subjectInput ? subjectInput.value.trim() : '';
+      const description = descriptionInput ? descriptionInput.value.trim() : '';
+
+      if (!description && !subject) {
+        alert('Please provide a subject or description.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Analyzing with AI...';
+
+      try {
+        const response = await fetch('http://localhost:5000/api/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: 'Dhruvi Shri',
+            customerEmail: 'dhruvi@example.com',
+            query: `${subject}: ${description}`.trim()
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const container = document.getElementById('aiResponseContainer');
+          const answerP = document.getElementById('aiAnswer');
+          
+          answerP.textContent = data.aiData?.ai_response || data.ticket?.aiSolution || 'Ticket created successfully!';
+          container.style.display = 'block';
+          container.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert('Error: ' + (data.message || 'Failed to submit ticket'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Could not connect to backend server on port 5000.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Ticket';
+      }
+    });
+  </script>
 
 </body>
 </html>
