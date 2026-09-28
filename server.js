@@ -1,10 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create HTTP Server & attach Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+// Attach io to Express so routes/controllers can use it if needed
+app.set('io', io);
+
+// Initialize Socket Events
+const initTicketSocket = require('./sockets/ticketSocket');
+initTicketSocket(io);
 
 // 1. Middlewares
 app.use(cors());
@@ -45,7 +63,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server Error', error: err.message });
 });
 
-// 7. Start Server Listener (Keeps the service alive)
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// 7. Start Server Listener (Runs Express + Socket.IO together)
+server.listen(PORT, () => {
+  console.log(`🚀 Server & Sockets running on port ${PORT}`);
 });
