@@ -1,3 +1,4 @@
+```javascript
 import { Server } from "socket.io";
 
 function initSockets(server) {
@@ -11,9 +12,9 @@ function initSockets(server) {
 
     io.on("connection", (socket) => {
 
-        console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
+        console.log(`⚡ [Socket.io] Client connected: ${socket.id}`);
 
-        // Welcome
+        // Welcome message
         socket.emit("welcome", {
             message: "Connected to ZenFlow Real-Time Server",
             socketId: socket.id
@@ -38,6 +39,7 @@ function initSockets(server) {
                 data
             );
 
+            // Send message to everyone in the ticket room
             io.to(data.ticketId).emit(
                 "receive_message",
                 data
@@ -45,7 +47,7 @@ function initSockets(server) {
 
         });
 
-        // Typing
+        // Typing indicator
         socket.on("typing", (data) => {
 
             socket.to(data.ticketId).emit(
@@ -57,7 +59,7 @@ function initSockets(server) {
 
         });
 
-        // Stop typing
+        // Stop typing indicator
         socket.on("stop_typing", (data) => {
 
             socket.to(data.ticketId).emit(
@@ -81,3 +83,4 @@ function initSockets(server) {
 }
 
 export default initSockets;
+```
