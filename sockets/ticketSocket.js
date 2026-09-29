@@ -1,4 +1,3 @@
-```javascript
 import { Server } from "socket.io";
 
 function initSockets(server) {
@@ -83,4 +82,3 @@ function initSockets(server) {
 }
 
 export default initSockets;
-```
