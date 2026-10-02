@@ -117,6 +117,11 @@ try {
 }
 
 // 7. User Profile Route
+// 5. AI Support Assistant Routes
+const aiRoutes = require('./aiRoutes');
+app.use('/api/ai', aiRoutes);
+
+// 6. User Profile Route
 app.get('/api/profile', (req, res) => {
   res.status(200).json({
     success: true,
@@ -131,11 +136,13 @@ app.get('/api/profile', (req, res) => {
 });
 
 // 8. Global Error Handling Middleware
+// 7. Global Error Handling Middleware (must stay below all routes)
 app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server Error', error: err.message });
 });
 
 // 9. Start Server Listener (HTTP + Socket.io)
+// 8. Start Server Listener (Runs Express + Socket.IO together)
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

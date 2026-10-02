@@ -1,14 +1,17 @@
 const express = require('express');
-import OpenAI from 'openai';
-
 const router = express.Router();
 
-const apiKey = process.env.OPENAI_API_KEY;
-const isMock = !apiKey || apiKey.startsWith('mock_') || apiKey === 'your_openai_api_key_here';
+let groq = null;
+const apiKey = process.env.GROQ_API_KEY;
+const isMock = !apiKey || apiKey.startsWith('mock_') || apiKey === 'your_groq_api_key_here';
 
-let openai;
 if (!isMock) {
-    openai = new OpenAI({ apiKey });
+    try {
+        const Groq = require('groq-sdk');
+        groq = new Groq({ apiKey });
+    } catch (err) {
+        console.warn('⚠️ groq-sdk package not installed. Running in Mock AI mode.');
+    }
 }
 
 router.post('/chat', async (req, res) => {
@@ -22,11 +25,10 @@ router.post('/chat', async (req, res) => {
 
         const lowerMsg = message.toLowerCase().trim();
 
-        // 2. Mock Mode (Runs when no real API key is present)
-        if (isMock) {
+        // 2. Mock Mode (Runs when no API key is present or groq instance is unavailable)
+        if (isMock || !groq) {
             let reply = "I am your ZenFlow AI assistant. You can ask me about tickets, password resets, or account options!";
 
-            // Distinct response matching logic
             if (lowerMsg.includes("history")) {
                 reply = "You can view your past and active support tickets on the Ticket History page!";
             } else if (lowerMsg.includes("ticket") || lowerMsg.includes("status")) {
@@ -39,29 +41,27 @@ router.post('/chat', async (req, res) => {
 
             return setTimeout(() => {
                 res.json({ reply: `[Mock AI]: ${reply}` });
-            }, 400);
+            }, 300);
         }
 
-        // 3. Live OpenAI Mode
-        const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+        // 3. Live Groq Mode
+        const completion = await groq.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
             messages: [
-                { role: "system", content: "You are ZenFlow AI, an intelligent support assistant." },
+                { role: "system", content: "You are ZenFlow AI, an intelligent support assistant for customer inquiries." },
                 { role: "user", content: message }
             ],
         });
 
-        const reply = completion.choices[0].message.content;
+        const reply = completion.choices[0]?.message?.content || "No response generated.";
         res.json({ reply });
 
     } catch (error) {
         console.error("AI Route Error:", error);
-
-        // Fallback for API key failure, quota limit, or server crash
         res.status(500).json({ 
             reply: "Our AI service is currently experiencing high demand or downtime. Please try again shortly." 
         });
     }
 });
 
-export default router;
+module.exports = router;
