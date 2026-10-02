@@ -21,7 +21,7 @@ exports.createTicket = async (req, res) => {
 
     // Call Python FastAPI RAG microservice
     try {
-      const aiResponse = await axios.post('http://127.0.0.1:8000/ask', {
+      const aiResponse = await axios.post('http://127.0.0.1:8000/api/v1/rag/query', {
         query: query,
         category: 'General'
       }, { timeout: 25000 });
