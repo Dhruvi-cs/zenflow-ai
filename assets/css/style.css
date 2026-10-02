@@ -1,101 +1,151 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
-body{
-    background:linear-gradient(135deg,#2563EB,#1E40AF);
-    height:100vh;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-.login-container{
-    width:100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+body {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #1e293b;
 }
 
-.login-card{
-    width:400px;
-    background:white;
-    padding:40px;
-    border-radius:20px;
-    box-shadow:0 15px 40px rgba(0,0,0,0.2);
-
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
 }
 
-.logo{
-    text-align:center;
-    font-size:55px;
-    color:#2563EB;
-    margin-bottom:20px;
+.login-card {
+    background-color: #ffffff;
+    padding: 36px 32px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    text-align: center;
 }
 
-h2{
-    text-align:center;
-    margin-bottom:10px;
+.logo {
+    width: 64px;
+    height: 64px;
+    background-color: #ede9fe;
+    color: #6366f1;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 18px auto;
 }
 
-.subtitle{
-    text-align:center;
-    color:#666;
-    margin-bottom:25px;
-    font-weight:600;
+.logo i {
+    font-size: 28px;
 }
 
-.input-box{
-    margin-bottom:20px;
+h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
 }
 
-.input-box label{
-    display:block;
-    margin-bottom:8px;
-    font-weight:500;
+.subtitle {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin-bottom: 24px;
+    font-weight: 400;
 }
 
-.input-box input{
-    width:100%;
-    padding:12px;
-    border:1px solid #d1d5db;
-    border-radius:10px;
-    font-size:15px;
-    transition:0.3s ease;
+.input-box {
+    margin-bottom: 18px;
+    text-align: left;
 }
 
-.input-box input:focus{
-    outline:none;
-    border-color:#2563EB;
-    box-shadow:0 0 8px rgba(37,99,235,0.3);
+.input-box label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #475569;
 }
 
-.options{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:25px;
-    font-size:14px;
+.input-box input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    color: #1e293b;
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.options a{
-    text-decoration:none;
-    color:#2563EB;
+.input-box input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-button{
-    width:100%;
-    padding:12px;
-    background:#2563EB;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-    cursor:pointer;
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+    font-size: 0.85rem;
+    color: #475569;
 }
 
-button:hover{
-    background:#1E40AF;
+.options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.options a {
+    text-decoration: none;
+    color: #6366f1;
+    font-weight: 500;
+}
+
+.options a:hover {
+    text-decoration: underline;
+}
+
+button[type="submit"],
+.login-btn {
+    width: 100%;
+    padding: 11px;
+    background-color: #6366f1;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button[type="submit"]:hover,
+.login-btn:hover {
+    background-color: #4f46e5;
+}
+
+.register {
+    margin-top: 22px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.register a {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register a:hover {
+    text-decoration: underline;
 }
