@@ -7,7 +7,6 @@ module.exports = function initTicketSocket(io) {
       message: "Connected to ZenFlow Real-Time Server",
       socketId: socket.id
     });
-}
 
     // Room partitioning by ticketId
     socket.on("join_ticket", (ticketId) => {
