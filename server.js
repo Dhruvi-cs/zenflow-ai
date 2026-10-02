@@ -26,7 +26,7 @@ app.use(cors({
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // Permissive for local dev
+      callback(null, true);
     }
   },
   credentials: true
@@ -52,7 +52,7 @@ try {
     initTicketSocket.default(io);
   }
 } catch (socketErr) {
-  console.log('Socket handler notice:', socketErr.message);
+  console.log('Socket handler loading notice:', socketErr.message);
 }
 
 // 3. Database Connection
@@ -67,13 +67,12 @@ app.get('/', (req, res) => {
   res.json({ message: 'ZenFlow Backend Engine is up and running!' });
 });
 
-// 5. Direct AI Chat Proxy Route (Explicitly provides data.reply for ai-chat.html)
+// 5. Direct AI Chat Proxy Route (Handles requests from ai-chat.html)
 app.post(['/api/ai/chat', '/api/ai/query', '/api/chat', '/api/ai'], async (req, res) => {
   try {
     const userQuery = req.body.message || req.body.query || req.body.prompt || '';
     const category = req.body.category || 'General';
 
-    // Call Python FastAPI RAG microservice on port 8000
     const aiRes = await axios.post('http://127.0.0.1:8000/api/v1/rag/query', {
       query: userQuery,
       category: category
@@ -90,9 +89,8 @@ app.post(['/api/ai/chat', '/api/ai/query', '/api/chat', '/api/ai'], async (req, 
       message: aiText
     });
   } catch (err) {
-    console.error('AI Proxy connection note:', err.message);
+    console.error('AI Proxy notice:', err.message);
 
-    // Fallback response so user always receives an answer
     const fallbackText = "To reset your password, please go to Settings > Account > Security and select 'Reset Password'. A confirmation link will be sent to your registered email.";
 
     return res.json({
