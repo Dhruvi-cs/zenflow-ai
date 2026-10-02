@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenFlow AI - Ticket Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 500px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    .chat-header {
+      padding: 15px;
+      background: #007bff;
+      color: #fff;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .chat-header h2 { margin: 0; font-size: 1.2rem; }
+    .chat-header p { margin: 5px 0 0; font-size: 0.85rem; opacity: 0.9; }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .message {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .message.received {
+      background: #e9ecef;
+      align-self: flex-start;
+      color: #333;
+    }
+    .message.sent {
+      background: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+    .sender-name {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 3px;
+      display: block;
+    }
+    .chat-input-area {
+      display: flex;
+      padding: 12px;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input-area input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+    }
+    .chat-input-area button {
+      margin-left: 10px;
+      padding: 10px 18px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chat-input-area button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>Ticket #101 Chat</h2>
+      <p id="status-text">Status: Connecting...</p>
+    </div>
+
+    <div class="chat-messages" id="messages-container"></div>
+
+    <form class="chat-input-area" onsubmit="sendMessage(event)">
+      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Socket.io Client Library -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <script>
+    // Connect to backend server
+    const socket = io("http://localhost:5000");
+
+    const currentTicketId = "ticket_101";
+    const username = "User_" + Math.floor(Math.random() * 1000);
+
+    const messagesContainer = document.getElementById("messages-container");
+    const statusText = document.getElementById("status-text");
+    const messageInput = document.getElementById("message-input");
+
+    // On Connection -> Join Room
+    socket.on("connect", () => {
+      statusText.innerText = `Status: Connected as ${username} (Room: ${currentTicketId})`;
+      socket.emit("join_ticket", currentTicketId);
+    });
+
+    // On Disconnect
+    socket.on("disconnect", () => {
+      statusText.innerText = "Status: Disconnected";
+    });
+
+    // Listen for Live Messages
+    socket.on("receive_message", (data) => {
+      displayMessage(data);
+    });
+
+    // Send message to backend without reloading
+    function sendMessage(e) {
+      if (e) e.preventDefault(); // Prevents page reload!
+
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      const payload = {
+        ticketId: currentTicketId,
+        sender: username,
+        message: text,
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      // Emit event to server
+      socket.emit("send_message", payload);
+
+      messageInput.value = "";
+    }
+
+    // Helper to append message bubbles
+    function displayMessage(data) {
+      const isSelf = data.sender === username;
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `message ${isSelf ? "sent" : "received"}`;
+      
+      msgDiv.innerHTML = `
+        <span class="sender-name">${isSelf ? "You" : data.sender}</span>
+        <div>${data.message}</div>
+      `;
+
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
