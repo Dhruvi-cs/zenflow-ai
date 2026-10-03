@@ -10,36 +10,19 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Allowed Origins (Handles both Live Server ports 5500 and 5501)
-const allowedOrigins = [
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-  'http://127.0.0.1:5501',
-  'http://localhost:5501',
-  'http://127.0.0.1:3000',
-  'http://localhost:3000'
-];
-
 // 1. Middlewares
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
-  },
+  origin: '*',
   credentials: true
 }));
 
 app.use(express.json());
 
-// 2. Socket.io Setup
+// 2. Socket.io Setup (Allows connections from file:/// as well as local dev servers)
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true
+    origin: '*',
+    methods: ['GET', 'POST']
   }
 });
 
@@ -78,11 +61,11 @@ app.post(['/api/ai/chat', '/api/ai/query', '/api/chat', '/api/ai'], async (req, 
       category: category
     });
 
-    const aiText = aiRes.data.answer || aiRes.data.reply || aiRes.data.response || "I have received your request.";
+    const aiText = aiRes.data.answer || aiRes.data.reply || aiRes.data.response || 'I have received your request.';
 
     return res.json({
       success: true,
-      status: "success",
+      status: 'success',
       reply: aiText,
       answer: aiText,
       response: aiText,
@@ -95,7 +78,7 @@ app.post(['/api/ai/chat', '/api/ai/query', '/api/chat', '/api/ai'], async (req, 
 
     return res.json({
       success: true,
-      status: "success",
+      status: 'success',
       reply: fallbackText,
       answer: fallbackText,
       response: fallbackText,
@@ -105,23 +88,14 @@ app.post(['/api/ai/chat', '/api/ai/query', '/api/chat', '/api/ai'], async (req, 
 });
 
 // 6. Ticket Routes
-const ticketRoutes = require('./routes/ticketRoutes');
-app.use('/api/tickets', ticketRoutes);
-
-// Optional: mount extra routes if present
 try {
-  const aiRoutes = require('./routes/aiRoutes') || require('./aiRoutes');
-  app.use('/api/ai', aiRoutes);
+  const ticketRoutes = require('./routes/ticketRoutes');
+  app.use('/api/tickets', ticketRoutes);
 } catch (e) {
-  // Routes handled by the proxy above
+  // Routes handled internally if module not present
 }
 
 // 7. User Profile Route
-// 5. AI Support Assistant Routes
-const aiRoutes = require('./aiRoutes');
-app.use('/api/ai', aiRoutes);
-
-// 6. User Profile Route
 app.get('/api/profile', (req, res) => {
   res.status(200).json({
     success: true,
@@ -136,13 +110,11 @@ app.get('/api/profile', (req, res) => {
 });
 
 // 8. Global Error Handling Middleware
-// 7. Global Error Handling Middleware (must stay below all routes)
 app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Server Error', error: err.message });
 });
 
-// 9. Start Server Listener (HTTP + Socket.io)
-// 8. Start Server Listener (Runs Express + Socket.IO together)
+// 9. Start Server Listener (Runs Express + Socket.IO together)
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
