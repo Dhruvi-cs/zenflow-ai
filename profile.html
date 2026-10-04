@@ -38,28 +38,28 @@
             <i class="fa-solid fa-user"></i>
         </div>
 
-        <h2>John Doe</h2>
-        <p>Customer</p>
+        <h2 id="displayUserName">John Doe</h2>
+        <p id="displayUserRole">Customer</p>
 
-        <form class="profile-form" onsubmit="event.preventDefault(); alert('Profile updated successfully!');">
+        <form class="profile-form" id="profileForm" onsubmit="handleProfileUpdate(event)">
             <div class="input-box">
                 <label>Full Name</label>
-                <input type="text" value="John Doe" required>
+                <input type="text" id="fullNameInput" required placeholder="Enter your full name">
             </div>
 
             <div class="input-box">
                 <label>Email Address</label>
-                <input type="email" value="john@example.com" required>
+                <input type="email" id="emailInput" required placeholder="name@example.com">
             </div>
 
             <div class="input-box">
                 <label>Phone Number</label>
-                <input type="text" value="+91 9876543210">
+                <input type="text" id="phoneInput" placeholder="+91 9876543210">
             </div>
 
             <div class="input-box">
                 <label>Address</label>
-                <textarea rows="3">Kanpur, Uttar Pradesh</textarea>
+                <textarea id="addressInput" rows="3" placeholder="Enter your city/address"></textarea>
             </div>
 
             <button type="submit" class="submit-btn">
@@ -69,6 +69,51 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Load saved user info from localStorage or set defaults
+    function loadProfile() {
+        const savedName = localStorage.getItem("zenflow_user") || "John Doe";
+        const savedEmail = localStorage.getItem("zenflow_email") || "john@example.com";
+        const savedPhone = localStorage.getItem("zenflow_phone") || "+91 9876543210";
+        const savedAddress = localStorage.getItem("zenflow_address") || "Kanpur, Uttar Pradesh";
+
+        // Fill form fields
+        document.getElementById("fullNameInput").value = savedName;
+        document.getElementById("emailInput").value = savedEmail;
+        document.getElementById("phoneInput").value = savedPhone;
+        document.getElementById("addressInput").value = savedAddress;
+
+        // Fill visual header card
+        document.getElementById("displayUserName").textContent = savedName;
+    }
+
+    // Save profile updates to storage
+    function handleProfileUpdate(event) {
+        event.preventDefault();
+
+        const name = document.getElementById("fullNameInput").value.trim();
+        const email = document.getElementById("emailInput").value.trim();
+        const phone = document.getElementById("phoneInput").value.trim();
+        const address = document.getElementById("addressInput").value.trim();
+
+        // Save persistent values for tickets & socket chat
+        localStorage.setItem("zenflow_user", name);
+        localStorage.setItem("zenflow_email", email);
+        localStorage.setItem("zenflow_phone", phone);
+        localStorage.setItem("zenflow_address", address);
+        
+        // Sync active chat session username
+        sessionStorage.setItem("chat_username", name);
+
+        // Update UI
+        document.getElementById("displayUserName").textContent = name;
+
+        alert("Profile updated successfully! Name synced to Chat & Tickets.");
+    }
+
+    window.addEventListener("DOMContentLoaded", loadProfile);
+</script>
 
 </body>
 </html>
