@@ -129,8 +129,12 @@
     const rawTicketId = urlParams.get("ticketId") || "general_support";
     const currentTicketId = "ticket_" + rawTicketId;
     
-    // Generate a random username or pull from storage
-    const username = "User_" + Math.floor(Math.random() * 1000);
+    // Persist username per browser tab session
+    let username = sessionStorage.getItem("chat_username");
+    if (!username) {
+      username = "User_" + Math.floor(Math.random() * 1000);
+      sessionStorage.setItem("chat_username", username);
+    }
 
     // Update Header with clean short ID
     const shortId = rawTicketId.length > 8 ? rawTicketId.slice(-4).toUpperCase() : rawTicketId;
