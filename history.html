@@ -35,12 +35,12 @@
 
     <div class="history-container">
         <div class="history-header">
-            <input type="text" placeholder="🔍 Search Ticket">
-            <select>
-                <option>All Status</option>
-                <option>Open</option>
-                <option>Pending</option>
-                <option>Resolved</option>
+            <input type="text" id="searchInput" placeholder="🔍 Search Ticket">
+            <select id="statusFilter">
+                <option value="ALL">All Status</option>
+                <option value="Open">Open</option>
+                <option value="Pending">Pending</option>
+                <option value="Resolved">Resolved</option>
             </select>
         </div>
 
@@ -53,37 +53,108 @@
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="historyTableBody">
                 <tr>
-                    <td>101</td>
-                    <td>Login Issue</td>
-                    <td>Technical</td>
-                    <td>High</td>
-                    <td><span class="open">Open</span></td>
-                    <td>20 Jul</td>
-                </tr>
-                <tr>
-                    <td>102</td>
-                    <td>Payment Failed</td>
-                    <td>Payment</td>
-                    <td>Medium</td>
-                    <td><span class="resolved">Resolved</span></td>
-                    <td>19 Jul</td>
-                </tr>
-                <tr>
-                    <td>103</td>
-                    <td>Refund Request</td>
-                    <td>Account</td>
-                    <td>Low</td>
-                    <td><span class="pending">Pending</span></td>
-                    <td>18 Jul</td>
+                    <td colspan="7" style="text-align: center; color: #888; padding: 25px;">Loading tickets from database...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    let allTickets = [];
+
+    // Helper to format date cleanly (e.g., "04 Oct")
+    function formatDate(dateStr) {
+        if (!dateStr) return 'Recent';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'Recent';
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    }
+
+    // Render table rows based on current filters
+    function renderTickets(tickets) {
+        const tbody = document.getElementById('historyTableBody');
+
+        if (!tickets || tickets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">No tickets match your filter.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = tickets.map(t => {
+            const rawId = (t._id || t.id || '').toString();
+            const displayId = rawId ? rawId.slice(-4).toUpperCase() : '---';
+            const subject = t.title || t.query || t.subject || 'Support Request';
+            const category = t.category || 'General';
+            const priority = t.priority || 'Medium';
+            const status = t.status || 'Open';
+            const date = formatDate(t.createdAt);
+
+            // CSS status class matching your existing dashboard.css (open, resolved, pending)
+            const statusClass = status.toLowerCase();
+
+            return `
+                <tr>
+                    <td><strong>#${displayId}</strong></td>
+                    <td>${subject}</td>
+                    <td>${category}</td>
+                    <td>${priority}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td>${date}</td>
+                    <td>
+                        <a href="chat.html?ticketId=${rawId}" style="text-decoration: none; color: #4338ca; font-weight: 500; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-comments"></i> Live Chat
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Apply text search and status filter
+    function filterTickets() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+        const selectedStatus = document.getElementById('statusFilter').value;
+
+        const filtered = allTickets.filter(ticket => {
+            const subject = (ticket.title || ticket.query || ticket.subject || '').toLowerCase();
+            const category = (ticket.category || '').toLowerCase();
+            const id = (ticket._id || ticket.id || '').toString().toLowerCase();
+
+            const matchesSearch = subject.includes(searchTerm) || category.includes(searchTerm) || id.includes(searchTerm);
+            const matchesStatus = (selectedStatus === 'ALL') || (ticket.status === selectedStatus);
+
+            return matchesSearch && matchesStatus;
+        });
+
+        renderTickets(filtered);
+    }
+
+    // 1. Fetch tickets from Node.js backend
+    async function fetchTicketHistory() {
+        try {
+            const res = await fetch('http://localhost:5000/api/tickets');
+            if (!res.ok) throw new Error('Network response failed');
+
+            const resData = await res.json();
+            allTickets = resData.data || resData.tickets || (Array.isArray(resData) ? resData : []);
+            renderTickets(allTickets);
+        } catch (err) {
+            console.error('Error fetching ticket history:', err);
+            document.getElementById('historyTableBody').innerHTML = 
+                '<tr><td colspan="7" style="text-align: center; color: #dc2626; padding: 20px;">Could not connect to server on port 5000.</td></tr>';
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('searchInput').addEventListener('input', filterTickets);
+    document.getElementById('statusFilter').addEventListener('change', filterTickets);
+    window.addEventListener('DOMContentLoaded', fetchTicketHistory);
+</script>
 
 </body>
 </html>

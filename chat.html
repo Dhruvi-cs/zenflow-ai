@@ -21,7 +21,7 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      height: 80vh;
+      height: 85vh;
     }
     .chat-header {
       padding: 15px;
@@ -29,9 +29,22 @@
       color: #fff;
       border-top-left-radius: 8px;
       border-top-right-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .chat-header h2 { margin: 0; font-size: 1.2rem; }
-    .chat-header p { margin: 5px 0 0; font-size: 0.85rem; opacity: 0.9; }
+    .chat-header h2 { margin: 0; font-size: 1.15rem; }
+    .chat-header p { margin: 4px 0 0; font-size: 0.8rem; opacity: 0.9; }
+    .back-btn {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: rgba(255, 255, 255, 0.35); }
     .chat-messages {
       flex: 1;
       padding: 15px;
@@ -46,6 +59,7 @@
       border-radius: 12px;
       font-size: 0.95rem;
       line-height: 1.4;
+      word-wrap: break-word;
     }
     .message.received {
       background: #e9ecef;
@@ -91,8 +105,11 @@
 
   <div class="chat-container">
     <div class="chat-header">
-      <h2>Ticket #101 Chat</h2>
-      <p id="status-text">Status: Connecting...</p>
+      <div>
+        <h2 id="ticket-header-title">Ticket Discussion</h2>
+        <p id="status-text">Status: Connecting...</p>
+      </div>
+      <a href="dashboard.html" class="back-btn">Dashboard</a>
     </div>
 
     <div class="chat-messages" id="messages-container"></div>
@@ -107,19 +124,28 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
   <script>
-    // Connect to backend server
-    const socket = io("http://localhost:5000");
-
-    const currentTicketId = "ticket_101";
+    // 1. Extract dynamic ticketId from URL: chat.html?ticketId=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawTicketId = urlParams.get("ticketId") || "general_support";
+    const currentTicketId = "ticket_" + rawTicketId;
+    
+    // Generate a random username or pull from storage
     const username = "User_" + Math.floor(Math.random() * 1000);
+
+    // Update Header with clean short ID
+    const shortId = rawTicketId.length > 8 ? rawTicketId.slice(-4).toUpperCase() : rawTicketId;
+    document.getElementById("ticket-header-title").innerText = `Ticket #${shortId} Live Chat`;
 
     const messagesContainer = document.getElementById("messages-container");
     const statusText = document.getElementById("status-text");
     const messageInput = document.getElementById("message-input");
 
-    // On Connection -> Join Room
+    // 2. Connect to backend server
+    const socket = io("http://localhost:5000");
+
+    // 3. On Connection -> Join Dedicated Room
     socket.on("connect", () => {
-      statusText.innerText = `Status: Connected as ${username} (Room: ${currentTicketId})`;
+      statusText.innerText = `Status: Connected as ${username}`;
       socket.emit("join_ticket", currentTicketId);
     });
 
@@ -128,14 +154,14 @@
       statusText.innerText = "Status: Disconnected";
     });
 
-    // Listen for Live Messages
+    // 4. Listen for incoming Live Messages for this ticket
     socket.on("receive_message", (data) => {
       displayMessage(data);
     });
 
-    // Send message to backend without reloading
+    // 5. Send message to current ticket room
     function sendMessage(e) {
-      if (e) e.preventDefault(); // Prevents page reload!
+      if (e) e.preventDefault();
 
       const text = messageInput.value.trim();
       if (!text) return;
@@ -144,16 +170,14 @@
         ticketId: currentTicketId,
         sender: username,
         message: text,
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      // Emit event to server
       socket.emit("send_message", payload);
-
       messageInput.value = "";
     }
 
-    // Helper to append message bubbles
+    // 6. Append message bubble to chat window
     function displayMessage(data) {
       const isSelf = data.sender === username;
       const msgDiv = document.createElement("div");
