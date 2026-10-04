@@ -154,6 +154,14 @@
       statusText.innerText = "Status: Disconnected";
     });
 
+    // 3b. Load existing message history from MongoDB
+    socket.on("load_history", (history) => {
+      messagesContainer.innerHTML = "";
+      if (Array.isArray(history)) {
+        history.forEach(msg => displayMessage(msg));
+      }
+    });
+
     // 4. Listen for incoming Live Messages for this ticket
     socket.on("receive_message", (data) => {
       displayMessage(data);

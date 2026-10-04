@@ -21,6 +21,14 @@ try {
     escalated: { type: Boolean, default: false },
     ai_response: { type: String, default: null },
     retrieved_sources: { type: Array, default: [] },
+    messages: [
+      {
+        sender: String,
+        message: String,
+        timestamp: String,
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
     createdAt: { type: Date, default: Date.now }
   });
   Ticket = mongoose.model('Ticket', ticketSchema);
@@ -77,7 +85,8 @@ router.post('/', async (req, res) => {
       deflected: isDeflected,
       ai_response: aiResponseText,
       retrieved_sources: sourcesList,
-      status: isDeflected ? 'Resolved' : 'Open'
+      status: isDeflected ? 'Resolved' : 'Open',
+      messages: []
     });
 
     await newTicket.save();
